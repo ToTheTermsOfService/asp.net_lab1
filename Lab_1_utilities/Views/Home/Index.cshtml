@@ -1,0 +1,44 @@
+﻿@model List<Lab_1_utilities.Models.TenantWithServices>
+
+@{
+    ViewData["Title"] = "Tenants with Services";
+}
+
+<h2>Tenants with Services</h2>
+
+@foreach (var tenant in Model)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h4>@tenant.FullName</h4>
+            <p>
+                <strong>Address:</strong> @tenant.Address <br />
+                <strong>Personal Account:</strong> @tenant.PersonalAccount <br />
+                <strong>Residents:</strong> @tenant.ResidentsCount <br />
+                <strong>Apartment Area:</strong> @tenant.ApartmentArea m²
+            </p>
+
+            <table class="table table-sm table-bordered">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Billing Type</th>
+                        <th>Tariff</th>
+                        <th>Calculated Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var service in tenant.Services)
+                    {
+                        <tr>
+                            <td>@service.ServiceName</td>
+                            <td>@service.BillingType</td>
+                            <td>@service.Tariff</td>
+                            <td>@service.CalculatedAmount</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
