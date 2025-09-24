@@ -6,7 +6,7 @@ namespace Lab_1_utilities.Data
     {
         public static void EnsureDatabaseExists(IConfiguration configuration, IWebHostEnvironment webHost)
         {
-            string connectionString = configuration.GetConnectionString("Localhost");
+            string connectionString = configuration.GetConnectionString("localDb");
             string databaseName = configuration["DatabaseName"];
             if (!DatabaseExists(connectionString, databaseName))
             {

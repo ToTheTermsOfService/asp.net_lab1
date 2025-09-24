@@ -1,12 +1,13 @@
 using Lab_1_utilities.Data;
 using Lab_1_utilities.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<TenantServiceRepository>();
-DatabaseInitializer.EnsureDatabaseExists(builder.Configuration, builder.Environment);
+builder.Services.AddDbContext<TenantDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("localDb")));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
