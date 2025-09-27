@@ -1,0 +1,19 @@
+﻿@model Tenant;
+
+@{
+    ViewData["Title"] = "Tenant Details";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h4>@Model.LastName @Model.FirstName @Model.MiddleName</h4>
+        <p>
+            <strong>Address:</strong> @Model.Address <br />
+            <strong>Personal Account:</strong> @Model.PersonalAccount <br />
+            <strong>Residents:</strong> @Model.ResidentsCount <br />
+            <strong>Apartment Area:</strong> @Model.ApartmentArea m²
+        </p>
+    </div>
+</div>
+
+<a asp-action="Index" class="btn btn-secondary mt-3">Back to List</a>

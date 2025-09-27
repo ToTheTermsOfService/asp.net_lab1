@@ -1,0 +1,37 @@
+﻿@model Lab_1_utilities.Models.Service
+
+@{
+    ViewData["Title"] = "View";
+}
+
+<h2>Create New Service</h2>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" placeholder="Service name" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="BillingType"></label>
+        <select asp-for="BillingType" class="form-control">
+            <option value="area">Per Area</option>
+            <option value="person">Per Person</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Tariff"></label>
+        <input asp-for="Tariff" class="form-control" placeholder="Tariff (e.g. 50.00)" />
+    </div>
+
+    <button type="submit" class="btn btn-success mt-3">Create</button>
+    <a asp-action="Index" asp-controller="Home" class="btn btn-secondary mt-3">Cancel</a>
+</form>
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -6,6 +6,9 @@
 
 <h2>Tenants with Services</h2>
 
+<a asp-action="Create" class="btn btn-success mb-3">➕ Add Tenant</a>
+<a asp-action="Create" asp-controller="Service" class="btn btn-success mb-3">➕ Add Service</a>
+
 @foreach (var tenant in Model)
 {
     <div class="card mb-3">
@@ -17,7 +20,26 @@
                 <strong>Residents:</strong> @tenant.ResidentsCount <br />
                 <strong>Apartment Area:</strong> @tenant.ApartmentArea m²
             </p>
+            <td>
+                <form asp-action="AddServiceToTenant" method="post" class="mt-2">
+                    <input type="hidden" name="tenantId" value="@tenant.Id" />
 
+                    <input list="servicesList"
+                           name="serviceId"
+                           class="form-control"
+                           placeholder="Type part of Service Name"
+                           autocomplete="off" required />
+
+                    <datalist id="servicesList">
+                        @foreach (var service in ViewBag.Services)
+                        {
+                            <option value="@service.Id">@service.Name</option>
+                        }
+                    </datalist>
+
+                    <button type="submit" class="btn btn-sm btn-primary mt-1">Add Service</button>
+                </form>
+            </td>
             <table class="table table-sm table-bordered">
                 <thead>
                     <tr>
@@ -39,6 +61,11 @@
                     }
                 </tbody>
             </table>
+        </div>
+        <div class="card-footer">
+            <a asp-action="Details" asp-route-id="@tenant.Id" class="btn btn-info btn-sm">Details</a>
+            <a asp-action="Edit" asp-route-id="@tenant.Id" class="btn btn-warning btn-sm">Edit</a>
+            <a asp-action="Delete" asp-route-id="@tenant.Id" class="btn btn-danger btn-sm">Delete</a>
         </div>
     </div>
 }

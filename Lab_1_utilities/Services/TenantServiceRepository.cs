@@ -1,13 +1,13 @@
 ﻿using Lab_1_utilities.Data;
+using Lab_1_utilities.Interfaces;
 using Lab_1_utilities.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lab_1_utilities.Services
 {
-    public class TenantServiceRepository
+    public class TenantServiceRepository: ITenantServiceRepository
     {
-        private readonly string _connectionString;
         private readonly TenantDbContext _dbContext;
 
         public TenantServiceRepository(TenantDbContext dbContext)
@@ -22,6 +22,7 @@ namespace Lab_1_utilities.Services
                 .OrderBy(t => t.Id)
                 .Select(t => new TenantWithServices
                 {
+                    Id = t.Id,
                     FullName = t.LastName + " " + t.FirstName +
                                (string.IsNullOrEmpty(t.MiddleName) ? "" : " " + t.MiddleName),
                     Address = t.Address,
@@ -39,6 +40,86 @@ namespace Lab_1_utilities.Services
                 .ToList();
 
             return tenants;
+        }
+
+        public Tenant? GetTenantById(int id)
+        {
+            return _dbContext.Tenants
+                .Include(t => t.TenantServices)
+                    .ThenInclude(ts => ts.Service)
+                .FirstOrDefault(t => t.Id == id);
+        }
+
+        public Tenant AddTenant(Tenant tenant)
+        {
+            _dbContext.Tenants.Add(tenant);
+            _dbContext.SaveChanges();
+            return tenant;
+        }
+
+        public Tenant? UpdateTenant(int id, Tenant updatedTenant)
+        {
+            var tenant = _dbContext.Tenants.FirstOrDefault(t => t.Id == id);
+            if (tenant == null)
+                return null;
+
+            tenant.FirstName = updatedTenant.FirstName;
+            tenant.LastName = updatedTenant.LastName;
+            tenant.MiddleName = updatedTenant.MiddleName;
+            tenant.PersonalAccount = updatedTenant.PersonalAccount;
+            tenant.Address = updatedTenant.Address;
+            tenant.ResidentsCount = updatedTenant.ResidentsCount;
+            tenant.ApartmentArea = updatedTenant.ApartmentArea;
+
+            _dbContext.SaveChanges();
+            return tenant;
+        }
+
+        public bool DeleteTenant(int id)
+        {
+            var tenant = _dbContext.Tenants.FirstOrDefault(t => t.Id == id);
+            if (tenant == null)
+                return false;
+
+            _dbContext.Tenants.Remove(tenant);
+            _dbContext.SaveChanges();
+            return true;
+        }
+
+        public void AddServiceToTenant(int tenantId, int serviceId)
+        {
+            var tenant = _dbContext.Tenants.FirstOrDefault(t => t.Id == tenantId);
+            var service = _dbContext.Services.FirstOrDefault(s => s.Id == serviceId);
+
+            if (tenant != null && service != null)
+            {
+                var relation = new TenantService
+                {
+                    TenantId = tenant.Id,
+                    ServiceId = service.Id
+                };
+
+                _dbContext.TenantServices.Add(relation);
+                _dbContext.SaveChanges();
+            }
+        }
+
+        public List<Service> GetAllServices()
+        {
+            return _dbContext.Services.ToList();
+        }
+
+        public void AddService(Service service)
+        {
+            _dbContext.Services.Add(service);
+            _dbContext.SaveChanges();
+        }
+
+        public List<Service> GetServicesByName(string name)
+        {
+            return _dbContext.Services
+                .Where(s => s.Name.Contains(name))
+                .ToList();
         }
     }
 }
