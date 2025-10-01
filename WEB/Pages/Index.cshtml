@@ -1,0 +1,66 @@
+﻿@page
+@model WEB.Pages.IndexModel
+@{
+    ViewData["Title"] = "Tenants with Services";
+}
+
+<h2>Tenants with Services</h2>
+
+<a asp-page="/CreateTenant" class="btn btn-success mb-3">➕ Add Tenant</a>
+<a asp-page="/CreateService" class="btn btn-success mb-3">➕ Add Service</a>
+
+@foreach (var tenant in Model.Tenants)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h4>@tenant.FullName</h4>
+            <p>
+                <strong>Address:</strong> @tenant.Address <br />
+                <strong>Personal Account:</strong> @tenant.PersonalAccount <br />
+                <strong>Residents:</strong> @tenant.ResidentsCount <br />
+                <strong>Apartment Area:</strong> @tenant.ApartmentArea m²
+            </p>
+
+            <form method="post" asp-page-handler="AddService">
+                <input type="hidden" name="tenantId" value="@tenant.Id" />
+
+                <select name="serviceId" class="form-select" required>
+                    <option value="">Select service...</option>
+                    @foreach (var s in Model.Services)
+                    {
+                        <option value="@s.Id">@s.Name</option>
+                    }
+                </select>
+
+                <button type="submit" class="btn btn-sm btn-primary mt-1">Add Service</button>
+            </form>
+
+            <table class="table table-sm table-bordered mt-2">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Billing Type</th>
+                        <th>Tariff</th>
+                        <th>Calculated Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var service in tenant.Services)
+                    {
+                        <tr>
+                            <td>@service.Name</td>
+                            <td>@service.BillingType</td>
+                            <td>@service.Tariff</td>
+                            <td>@service.CalculatedAmount</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <a asp-page="/TenantDetails" asp-route-id="@tenant.Id" class="btn btn-info btn-sm">Details</a>
+            <a asp-page="/EditTenant" asp-route-id="@tenant.Id" class="btn btn-warning btn-sm">Edit</a>
+            <a asp-page="/DeleteTenant" asp-route-id="@tenant.Id" class="btn btn-danger btn-sm">Delete</a>
+        </div>
+    </div>
+}
