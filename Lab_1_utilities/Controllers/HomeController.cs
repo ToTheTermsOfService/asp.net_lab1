@@ -69,7 +69,6 @@ namespace Lab_1_utilities.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, Tenant tenant)
         {
             if (id != tenant.Id) return BadRequest();

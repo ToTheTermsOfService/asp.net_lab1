@@ -23,8 +23,9 @@ namespace Lab_1_utilities.Services
                 .Select(t => new TenantWithServices
                 {
                     Id = t.Id,
-                    FullName = t.LastName + " " + t.FirstName +
-                               (string.IsNullOrEmpty(t.MiddleName) ? "" : " " + t.MiddleName),
+                    LastName = t.LastName,
+                    FirstName = t.FirstName,
+                    MiddleName = t.MiddleName ?? "",
                     Address = t.Address,
                     PersonalAccount = t.PersonalAccount,
                     ResidentsCount = t.ResidentsCount,
@@ -93,10 +94,12 @@ namespace Lab_1_utilities.Services
 
             if (tenant != null && service != null)
             {
+                var calculatedAmount = CalculateAmount(tenant, service);
                 var relation = new TenantService
                 {
                     TenantId = tenant.Id,
-                    ServiceId = service.Id
+                    ServiceId = service.Id,
+                    CalculatedAmount = calculatedAmount
                 };
 
                 _dbContext.TenantServices.Add(relation);
@@ -121,5 +124,20 @@ namespace Lab_1_utilities.Services
                 .Where(s => s.Name.Contains(name))
                 .ToList();
         }
+
+        private decimal CalculateAmount(Tenant tenant, Service service)
+        {
+            if (service.BillingType == "area")
+            {
+                return service.Tariff * tenant.ApartmentArea;
+            }
+            else if (service.BillingType == "person")
+            {
+                return service.Tariff * tenant.ResidentsCount;
+            }
+
+            throw new InvalidOperationException("Невідомий тип нарахування для послуги.");
+        }
+
     }
 }

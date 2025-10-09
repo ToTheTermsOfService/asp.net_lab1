@@ -11,36 +11,74 @@
 
 @foreach (var tenant in Model)
 {
-    <div class="card mb-3">
+    <div class="card mb-3 tenant-card" data-id="@tenant.Id">
         <div class="card-body">
-            <h4>@tenant.FullName</h4>
+            <input type="hidden" class="tenant-id" value="@tenant.Id" />
+
+            <h4>
+                <span class="view-mode">@tenant.LastName @tenant.FirstName @tenant.MiddleName</span>
+                <div class="edit-mode d-none">
+                    <input class="form-control tenant-lastname" value="@tenant.LastName" placeholder="Last Name" />
+                    <input class="form-control tenant-firstname" value="@tenant.FirstName" placeholder="First Name" />
+                    <input class="form-control tenant-middlename" value="@tenant.MiddleName" placeholder="Middle Name" />
+                </div>
+            </h4>
+
             <p>
-                <strong>Address:</strong> @tenant.Address <br />
-                <strong>Personal Account:</strong> @tenant.PersonalAccount <br />
-                <strong>Residents:</strong> @tenant.ResidentsCount <br />
-                <strong>Apartment Area:</strong> @tenant.ApartmentArea m²
+                <strong>Address:</strong>
+                <span class="view-mode">@tenant.Address</span>
+                <input class="form-control edit-mode d-none tenant-address" value="@tenant.Address" />
+
+                <br />
+
+                <strong>Personal Account:</strong>
+                <span class="view-mode">@tenant.PersonalAccount</span>
+                <input class="form-control edit-mode d-none tenant-account" value="@tenant.PersonalAccount" />
+
+                <br />
+
+                <strong>Residents:</strong>
+                <span class="view-mode">@tenant.ResidentsCount</span>
+                <input type="number" class="form-control edit-mode d-none tenant-residents" value="@tenant.ResidentsCount" />
+
+                <br />
+
+                <strong>Apartment Area (m²):</strong>
+                <span class="view-mode">@tenant.ApartmentArea</span>
+                <input type="number" class="form-control edit-mode d-none tenant-area"
+                       value="@tenant.ApartmentArea.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                       step="0.01"
+                       min="0"
+                       lang="en" />
             </p>
-            <td>
-                <form asp-action="AddServiceToTenant" method="post" class="mt-2">
-                    <input type="hidden" name="tenantId" value="@tenant.Id" />
-
-                    <input list="servicesList"
-                           name="serviceId"
-                           class="form-control"
-                           placeholder="Type part of Service Name"
-                           autocomplete="off" required />
-
-                    <datalist id="servicesList">
-                        @foreach (var service in ViewBag.Services)
-                        {
-                            <option value="@service.Id">@service.Name</option>
-                        }
-                    </datalist>
-
-                    <button type="submit" class="btn btn-sm btn-primary mt-1">Add Service</button>
-                </form>
+            <td> 
+                <form asp-action="AddServiceToTenant" method="post" class="mt-2"> 
+                <input type="hidden" name="tenantId" value="@tenant.Id" /> 
+                <input list="servicesList" name="serviceId" class="form-control" placeholder="Type part of Service Name" autocomplete="off" required /> 
+                <datalist id="servicesList"> 
+                    @foreach (var service in ViewBag.Services)
+                    {
+                        <option value="@service.Id">@service.Name</option>
+                    } 
+                </datalist> 
+                <button type="submit" class="btn btn-sm btn-primary mt-1">Add Service</button> </form> 
             </td>
-            <table class="table table-sm table-bordered">
+
+            <div class="actions">
+                <button type="button" class="btn btn-warning btn-sm toggle-edit">✏️ Edit</button>
+                <form asp-action="Delete" asp-controller="Home" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@tenant.Id" />
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger btn-sm"
+                            onclick="return confirm('Ви впевнені, що хочете видалити цього мешканця?');">
+                        🗑️ Delete
+                    </button>
+                </form>
+                <button type="button" class="btn btn-success btn-sm save-tenant d-none">💾 Save</button>
+                <button type="button" class="btn btn-secondary btn-sm cancel-edit d-none">❌ Cancel</button>
+            </div>
+
+            <table class="table table-sm table-bordered mt-3">
                 <thead>
                     <tr>
                         <th>Service</th>
@@ -62,10 +100,67 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer">
-            <a asp-action="Details" asp-route-id="@tenant.Id" class="btn btn-info btn-sm">Details</a>
-            <a asp-action="Edit" asp-route-id="@tenant.Id" class="btn btn-warning btn-sm">Edit</a>
-            <a asp-action="Delete" asp-route-id="@tenant.Id" class="btn btn-danger btn-sm">Delete</a>
-        </div>
     </div>
+}
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).on("click", ".toggle-edit", function () {
+            let card = $(this).closest(".tenant-card");
+            card.find(".view-mode").addClass("d-none");
+            card.find(".edit-mode").removeClass("d-none");
+            card.find(".toggle-edit").addClass("d-none");
+            card.find(".save-tenant, .cancel-edit").removeClass("d-none");
+        });
+
+        $(document).on("click", ".cancel-edit", function () {
+            let card = $(this).closest(".tenant-card");
+            card.find(".view-mode").removeClass("d-none");
+            card.find(".edit-mode").addClass("d-none");
+
+            card.find(".toggle-edit").removeClass("d-none");
+            card.find(".save-tenant, .cancel-edit").addClass("d-none");
+        });
+
+        $(document).on("click", ".save-tenant", function () {
+            let card = $(this).closest(".tenant-card");
+
+            let data = {
+                Id: card.find(".tenant-id").val(),
+                LastName: card.find(".tenant-lastname").val(),
+                FirstName: card.find(".tenant-firstname").val(),
+                MiddleName: card.find(".tenant-middlename").val(),
+                Address: card.find(".tenant-address").val(),
+                PersonalAccount: card.find(".tenant-account").val(),
+                ResidentsCount: card.find(".tenant-residents").val(),
+                ApartmentArea: card.find(".tenant-area").val()
+            };
+            console.log(data);
+            $.ajax({
+                url: '@Url.Action("Edit", "Home")/' + data.Id,
+                type: "POST",
+                data: data,
+                success: function (response) {
+                    card.find(".view-mode").removeClass("d-none");
+                    card.find(".edit-mode").addClass("d-none");
+
+                    card.find(".toggle-edit").removeClass("d-none");
+                    card.find(".save-tenant, .cancel-edit").addClass("d-none");
+
+                    card.find(".view-mode").each(function () {
+                        let span = $(this);
+                        if (span.hasClass("tenant-fullname")) span.text(data.FullName);
+                    });
+                    card.find("h4 .view-mode").text(data.LastName + " " + data.FirstName + " " + (data.MiddleName || ""));
+                    card.find("p .view-mode").eq(0).text(data.Address);
+                    card.find("p .view-mode").eq(1).text(data.PersonalAccount);
+                    card.find("p .view-mode").eq(2).text(data.ResidentsCount);
+                    card.find("p .view-mode").eq(3).text(data.ApartmentArea);
+                },
+                error: function () {
+                    alert("❌ Error saving tenant");
+                }
+            });
+        });
+    </script>
 }
