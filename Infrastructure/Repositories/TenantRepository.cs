@@ -23,8 +23,9 @@ namespace Infrastructure.Repositories
                 .Select(t => new TenantWithServices
                 {
                     Id = t.Id,
-                    FullName = t.LastName + " " + t.FirstName +
-                                (string.IsNullOrEmpty(t.MiddleName) ? "" : " " + t.MiddleName),
+                    LastName = t.LastName,
+                    FirstName = t.FirstName,
+                    MiddleName = t.MiddleName ?? "",
                     Address = t.Address,
                     PersonalAccount = t.PersonalAccount,
                     ResidentsCount = t.ResidentsCount,
@@ -93,10 +94,12 @@ namespace Infrastructure.Repositories
 
             if (tenant != null && service != null)
             {
+                var calculatedAmount = CalculateAmount(tenant, service);
                 var relation = new TenantService
                 {
                     TenantId = tenant.Id,
-                    ServiceId = service.Id
+                    ServiceId = service.Id,
+                    CalculatedAmount = calculatedAmount
                 };
 
                 _dbContext.TenantServices.Add(relation);
@@ -120,6 +123,15 @@ namespace Infrastructure.Repositories
             return _dbContext.Services
                 .Where(s => s.Name.Contains(name))
                 .ToList();
+        }
+        private decimal CalculateAmount(Tenant tenant, Service service)
+        {
+            return service.BillingType switch
+            {
+                "person" => service.Tariff * tenant.ResidentsCount,
+                "area" => service.Tariff * tenant.ApartmentArea,
+                _ => service.Tariff
+            };
         }
     }
 }

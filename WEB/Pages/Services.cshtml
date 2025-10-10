@@ -1,0 +1,78 @@
+﻿@page
+@model WEB.Pages.ServicesModel
+@{
+    ViewData["Title"] = "Services Management";
+}
+
+<h2>Services Management</h2>
+
+<div class="input-group mb-4">
+    <input type="text" id="searchInput" class="form-control" placeholder="Enter service name...">
+    <button class="btn btn-outline-secondary" type="button" onclick="searchServices()">Search</button>
+</div>
+<div id="searchResults" class="mb-4"></div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>Create New Service</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" id="createServiceForm">
+                    <div class="form-group">
+                        <label for="Name">Name</label>
+                        <input name="Name" class="form-control" placeholder="Service name" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="BillingType">Billing Type</label>
+                        <select name="BillingType" class="form-control">
+                            <option value="area">Per Area</option>
+                            <option value="person">Per Person</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Tariff">Tariff</label>
+                        <input name="Tariff" class="form-control" placeholder="Tariff (e.g. 50.00)" />
+                    </div>
+
+                    <button type="submit" class="btn btn-success mt-3">Create</button>
+                    <a asp-page="/Index" class="btn btn-secondary mt-3">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>Existing Services</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Billing Type</th>
+                            <th>Tariff</th>
+                            <th>Calculated Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var service in Model.Services)
+                        {
+                            <tr>
+                                <td>@service.Name</td>
+                                <td>@service.BillingType</td>
+                                <td>@service.Tariff</td>
+                                <td>@service.CalculatedAmount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
