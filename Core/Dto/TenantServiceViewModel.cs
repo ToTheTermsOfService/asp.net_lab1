@@ -2,6 +2,7 @@
 {
     public class TenantServiceViewModel
     {
+        public int Id { get; set; }
         public string ServiceName { get; set; } = null!;
         public string BillingType { get; set; } = null!;
         public decimal Tariff { get; set; }

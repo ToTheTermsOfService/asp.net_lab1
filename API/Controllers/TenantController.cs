@@ -1,4 +1,5 @@
-﻿using Core.Entities;
+﻿using Core.Dto;
+using Core.Entities;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -31,9 +32,19 @@ namespace API.Controllers
 
         // POST api/tenant
         [HttpPost]
-        public IActionResult AddTenant([FromBody] Tenant tenant)
+        public IActionResult AddTenant([FromBody] CreateTenantDto createTenant)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+            Tenant tenant = new Tenant
+            {
+                LastName = createTenant.LastName,
+                FirstName = createTenant.FirstName,
+                MiddleName = createTenant.MiddleName,
+                Address = createTenant.Address,
+                PersonalAccount = createTenant.PersonalAccount,
+                ResidentsCount = createTenant.ResidentsCount,
+                ApartmentArea = createTenant.ApartmentArea
+            };
             var created = _repository.AddTenant(tenant);
             return CreatedAtAction(nameof(GetTenantById), new { id = created.Id }, created);
         }

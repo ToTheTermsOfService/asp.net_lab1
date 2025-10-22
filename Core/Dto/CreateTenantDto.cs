@@ -1,6 +1,6 @@
-﻿namespace Core.Entities
+﻿namespace Core.Dto
 {
-    public class Tenant: BaseEntity
+    public class CreateTenantDto
     {
         public string LastName { get; set; } = null!;
         public string FirstName { get; set; } = null!;
@@ -8,8 +8,6 @@
         public string PersonalAccount { get; set; } = null!;
         public string Address { get; set; } = null!;
         public int ResidentsCount { get; set; }
-        public decimal ApartmentArea { get; set; } 
-
-        public ICollection<TenantService> TenantServices { get; set; } = new List<TenantService>();
+        public decimal ApartmentArea { get; set; }
     }
 }

@@ -10,7 +10,6 @@
         public string Address { get; set; }
         public int ResidentsCount { get; set; }
         public decimal ApartmentArea { get; set; }
-
         public List<ServiceDto> Services { get; set; } = new();
     }
 }

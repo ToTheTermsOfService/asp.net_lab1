@@ -10,8 +10,9 @@ namespace Core.Interfaces
         Tenant AddTenant(Tenant tenant);
         Tenant? UpdateTenant(int id, Tenant updatedTenant);
         bool DeleteTenant(int id);
+        bool DeleteService(int id); 
         void AddServiceToTenant(int tenantId, int serviceId);
-        List<Service> GetAllServices();
+        List<TenantServiceViewModel> GetAllServices();
         void AddService(Service service);
         List<Service> GetServicesByName(string name);
     }

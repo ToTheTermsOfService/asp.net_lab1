@@ -39,5 +39,15 @@ namespace API.Controllers
             var services = _repository.GetServicesByName(name);
             return Ok(services);
         }
+
+        // DELETE api/tenant/5
+        [HttpDelete("{id}")]
+        public IActionResult DeleteTenant(int id)
+        {
+            var deleted = _repository.DeleteService(id);
+            if (!deleted) return NotFound();
+
+            return NoContent();
+        }
     }
 }

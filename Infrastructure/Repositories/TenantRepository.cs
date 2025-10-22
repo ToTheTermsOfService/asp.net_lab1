@@ -87,6 +87,17 @@ namespace Infrastructure.Repositories
             return true;
         }
 
+        public bool DeleteService(int id)
+        {
+            var service = _dbContext.Services.FirstOrDefault(t => t.Id == id);
+            if (service == null)
+                return false;
+
+            _dbContext.Services.Remove(service);
+            _dbContext.SaveChanges();
+            return true;
+        }
+
         public void AddServiceToTenant(int tenantId, int serviceId)
         {
             var tenant = _dbContext.Tenants.FirstOrDefault(t => t.Id == tenantId);
@@ -107,9 +118,18 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public List<Service> GetAllServices()
+        public List<TenantServiceViewModel> GetAllServices()
         {
-            return _dbContext.Services.ToList();
+            return _dbContext.Services
+                .Select(s => new TenantServiceViewModel
+                {
+                    Id = s.Id,
+                    ServiceName = s.Name,
+                    BillingType = s.BillingType,
+                    Tariff = s.Tariff,
+                    CalculatedAmount = 0 //розрахувати потім
+                })
+                .ToList();
         }
 
         public void AddService(Service service)

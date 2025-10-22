@@ -5,6 +5,7 @@
 }
 
 <h2>Services Management</h2>
+@Html.AntiForgeryToken()
 
 <div class="input-group mb-4">
     <input type="text" id="searchInput" class="form-control" placeholder="Enter service name...">
@@ -20,22 +21,34 @@
             </div>
             <div class="card-body">
                 <form method="post" id="createServiceForm">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
                     <div class="form-group">
-                        <label for="Name">Name</label>
-                        <input name="Name" class="form-control" placeholder="Service name" />
+                        <label asp-for="NewService.Name">Name</label>
+                        <input asp-for="NewService.Name" class="form-control" placeholder="Service name" />
+                        <span asp-validation-for="NewService.Name" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label for="BillingType">Billing Type</label>
-                        <select name="BillingType" class="form-control">
+                        <label asp-for="NewService.BillingType">Billing Type</label>
+                        <select asp-for="NewService.BillingType" class="form-control">
+                            <option value="">Select Billing Type</option>
                             <option value="area">Per Area</option>
                             <option value="person">Per Person</option>
                         </select>
+                        <span asp-validation-for="NewService.BillingType" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label for="Tariff">Tariff</label>
-                        <input name="Tariff" class="form-control" placeholder="Tariff (e.g. 50.00)" />
+                        <label asp-for="NewService.Tariff">Tariff</label>
+                        <input asp-for="NewService.Tariff"
+                               type="number"
+                               step="any"
+                               class="form-control"
+                               placeholder="Tariff (e.g. 50.00 or 50,00)"
+                               lang="en"
+                               oninput="this.value = this.value.replace(',', '.')" />
+                        <span asp-validation-for="NewService.Tariff" class="text-danger"></span>
                     </div>
 
                     <button type="submit" class="btn btn-success mt-3">Create</button>
@@ -57,17 +70,42 @@
                             <th>Service</th>
                             <th>Billing Type</th>
                             <th>Tariff</th>
-                            <th>Calculated Amount</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var service in Model.Services)
                         {
-                            <tr>
-                                <td>@service.Name</td>
-                                <td>@service.BillingType</td>
-                                <td>@service.Tariff</td>
-                                <td>@service.CalculatedAmount</td>
+                            <tr class="service-row" data-id="@service.Id">
+                                <td>
+                                    <span class="view-mode">@service.ServiceName</span>
+                                    <input class="form-control edit-mode d-none service-name" value="@service.ServiceName" />
+                                </td>
+                                <td>
+                                    <span class="view-mode">@service.BillingType</span>
+                                    <select class="form-control edit-mode d-none service-billingtype">
+                                        <option value="area" selected="@(service.BillingType == "area")">Per Area</option>
+                                        <option value="person" selected="@(service.BillingType == "person")">Per Person</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <span class="view-mode">@service.Tariff</span>
+                                    <input type="number" step="0.01" class="form-control edit-mode d-none service-tariff" value="@service.Tariff" />
+                                </td>
+                                <td>
+                                    <div class="actions">
+                                        <button type="button" class="btn btn-warning btn-sm toggle-edit-service">✏️ Edit</button>
+                                        <form asp-page-handler="Delete" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@service.Id" />
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Ви впевнені, що хочете видалити цей сервіс?');">
+                                                🗑️ Delete
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-success btn-sm save-service d-none">💾 Save</button>
+                                        <button type="button" class="btn btn-secondary btn-sm cancel-edit-service d-none">❌ Cancel</button>
+                                    </div>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -76,3 +114,89 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Функціонал редагування сервісів
+        $(document).on("click", ".toggle-edit-service", function () {
+            let row = $(this).closest(".service-row");
+            row.find(".view-mode").addClass("d-none");
+            row.find(".edit-mode").removeClass("d-none");
+            row.find(".toggle-edit-service").addClass("d-none");
+            row.find(".save-service, .cancel-edit-service").removeClass("d-none");
+        });
+
+        $(document).on("click", ".cancel-edit-service", function () {
+            let row = $(this).closest(".service-row");
+            row.find(".view-mode").removeClass("d-none");
+            row.find(".edit-mode").addClass("d-none");
+            row.find(".toggle-edit-service").removeClass("d-none");
+            row.find(".save-service, .cancel-edit-service").addClass("d-none");
+        });
+
+        $(document).on("click", ".save-service", function () {
+            let row = $(this).closest(".service-row");
+            let tariffValue = row.find(".service-tariff").val().replace(',', '.');
+
+            let data = {
+                Id: parseInt(row.data("id")),
+                Name: row.find(".service-name").val(),
+                BillingType: row.find(".service-billingtype").val(),
+                Tariff: parseFloat(tariffValue)
+            };
+
+            console.log("Saving service:", data);
+
+            // Створюємо FormData для відправки
+            let formData = new FormData();
+            formData.append("EditService.Id", data.Id);
+            formData.append("EditService.Name", data.Name);
+            formData.append("EditService.BillingType", data.BillingType);
+            formData.append("EditService.Tariff", data.Tariff);
+
+            fetch('?handler=EditService', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.text();
+                }
+            })
+            .then(() => {
+                // Оновлюємо інтерфейс
+                row.find(".view-mode").removeClass("d-none");
+                row.find(".edit-mode").addClass("d-none");
+                row.find(".toggle-edit-service").removeClass("d-none");
+                row.find(".save-service, .cancel-edit-service").addClass("d-none");
+
+                // Оновлюємо відображені дані
+                row.find(".view-mode").eq(0).text(data.Name);
+                row.find(".view-mode").eq(1).text(data.BillingType);
+                row.find(".view-mode").eq(2).text(data.Tariff);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("❌ Помилка при збереженні даних сервісу");
+            });
+        });
+
+        function searchServices() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const resultsDiv = document.getElementById('searchResults');
+
+            if (searchTerm.length > 0) {
+                // Тут можна додати логіку пошуку
+                resultsDiv.innerHTML = `<div class="alert alert-info">Search results for: ${searchTerm}</div>`;
+            } else {
+                resultsDiv.innerHTML = '';
+            }
+        }
+    </script>
+}
