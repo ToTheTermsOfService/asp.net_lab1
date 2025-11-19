@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Infrastru
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", "{7618DC1B-B086-4CA6-B5ED-701F48E42B03}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "API\API.csproj", "{B17EA27C-3C52-4E2C-8C70-C05AC374F4A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API", "API\API.csproj", "{B17EA27C-3C52-4E2C-8C70-C05AC374F4A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WEB", "WEB\WEB.csproj", "{BEE2B738-7911-418A-83A3-335BBA743854}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WEB", "WEB\WEB.csproj", "{BEE2B738-7911-418A-83A3-335BBA743854}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorWeb", "BlazorWeb\BlazorWeb.csproj", "{EEB6A52A-732E-42D7-AF8B-A6EA0FB432FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{BEE2B738-7911-418A-83A3-335BBA743854}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEE2B738-7911-418A-83A3-335BBA743854}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BEE2B738-7911-418A-83A3-335BBA743854}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEB6A52A-732E-42D7-AF8B-A6EA0FB432FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEB6A52A-732E-42D7-AF8B-A6EA0FB432FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEB6A52A-732E-42D7-AF8B-A6EA0FB432FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEB6A52A-732E-42D7-AF8B-A6EA0FB432FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

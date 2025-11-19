@@ -1,0 +1,355 @@
+﻿@page "/"
+@using WEB.DTOs
+@using Microsoft.AspNetCore.Components.Forms
+@inject IHttpClientFactory HttpClientFactory
+@inject ILogger<Index> Logger
+@inject NavigationManager Navigation
+
+<h3>Tenants with Services</h3>
+
+@if (tenants is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <button class="btn btn-success mb-3" @onclick="ToggleAddTenantForm">➕ Add Tenant</button>
+
+    @if (showAddForm)
+    {
+        <EditForm Model="newTenant" OnValidSubmit="CreateTenant">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="card p-3 mb-3">
+                <h4>Add New Tenant</h4>
+
+                <div class="mb-2">
+                    <label class="form-label">Last Name</label>
+                    <InputText @bind-Value="newTenant.LastName" class="form-control" placeholder="Last Name" />
+                    <ValidationMessage For="@(() => newTenant.LastName)" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">First Name</label>
+                    <InputText @bind-Value="newTenant.FirstName" class="form-control" placeholder="First Name" />
+                    <ValidationMessage For="@(() => newTenant.FirstName)" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Middle Name</label>
+                    <InputText @bind-Value="newTenant.MiddleName" class="form-control" placeholder="Middle Name" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Address</label>
+                    <InputText @bind-Value="newTenant.Address" class="form-control" placeholder="Address" />
+                    <ValidationMessage For="@(() => newTenant.Address)" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Personal Account</label>
+                    <InputText @bind-Value="newTenant.PersonalAccount" class="form-control" placeholder="Account" />
+                    <ValidationMessage For="@(() => newTenant.PersonalAccount)" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Residents Count</label>
+                    <InputNumber @bind-Value="newTenant.ResidentsCount" class="form-control" placeholder="Residents" />
+                    <ValidationMessage For="@(() => newTenant.ResidentsCount)" />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Apartment Area (m²)</label>
+                    <InputNumber @bind-Value="newTenant.ApartmentArea" class="form-control" step="0.01" placeholder="Area (m²)" />
+                    <ValidationMessage For="@(() => newTenant.ApartmentArea)" />
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-3">💾 Save</button>
+                <button type="button" class="btn btn-secondary mt-3" @onclick="ToggleAddTenantForm">❌ Cancel</button>
+            </div>
+        </EditForm>
+    }
+
+    <a href="/services" class="btn btn-success mb-3">➕ Add Service</a>
+
+    @foreach (var tenant in tenants)
+    {
+        <div class="card mb-3 p-3">
+            @if (editingTenantId == tenant.Id)
+            {
+                <EditForm Model="editTenant" OnValidSubmit="@(() => SaveTenant(tenant.Id))" OnInvalidSubmit="@CancelEdit">
+                    <DataAnnotationsValidator />
+                    <div class="mb-2">
+                        <label class="form-label">Last Name</label>
+                        <InputText @bind-Value="editTenant.LastName" class="form-control" />
+                        <ValidationMessage For="@(() => editTenant.LastName)" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">First Name</label>
+                        <InputText @bind-Value="editTenant.FirstName" class="form-control" />
+                        <ValidationMessage For="@(() => editTenant.FirstName)" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Middle Name</label>
+                        <InputText @bind-Value="editTenant.MiddleName" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Address</label>
+                        <InputText @bind-Value="editTenant.Address" class="form-control" />
+                        <ValidationMessage For="@(() => editTenant.Address)" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Personal Account</label>
+                        <InputText @bind-Value="editTenant.PersonalAccount" class="form-control" />
+                        <ValidationMessage For="@(() => editTenant.PersonalAccount)" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Residents Count</label>
+                        <InputNumber @bind-Value="editTenant.ResidentsCount" class="form-control" />
+                        <ValidationMessage For="@(() => editTenant.ResidentsCount)" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Apartment Area (m²)</label>
+                        <InputNumber @bind-Value="editTenant.ApartmentArea" class="form-control" step="0.01" />
+                        <ValidationMessage For="@(() => editTenant.ApartmentArea)" />
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-success btn-sm">💾 Save</button>
+                        <button type="button" class="btn btn-secondary btn-sm" @onclick="CancelEdit">❌ Cancel</button>
+                    </div>
+                </EditForm>
+            }
+            else
+            {
+                <h4>@tenant.LastName @tenant.FirstName @tenant.MiddleName</h4>
+                <p>
+                    <b>Address:</b> @tenant.Address <br />
+                    <b>Account:</b> @tenant.PersonalAccount <br />
+                    <b>Residents:</b> @tenant.ResidentsCount <br />
+                    <b>Area:</b> @tenant.ApartmentArea m²
+                </p>
+            }
+
+            <div class="mb-3">
+                <input list="@($"servicesList-{tenant.Id}")" @bind="selectedServiceIds[tenant.Id]"
+                       class="form-control" placeholder="Type part of service name" />
+                <datalist id="@($"servicesList-{tenant.Id}")">
+                    @foreach (var s in services)
+                    {
+                        <option value="@s.Id">@s.ServiceName</option>
+                    }
+                </datalist>
+                <button class="btn btn-sm btn-primary mt-2" @onclick="() => AddServiceToTenant(tenant.Id)">
+                    Add Service
+                </button>
+            </div>
+
+            <table class="table table-sm table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Billing Type</th>
+                        <th>Tariff</th>
+                        <th>Calculated Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in tenant.Services)
+                    {
+                        <tr>
+                            <td>@s.ServiceName</td>
+                            <td>@s.BillingType</td>
+                            <td>@s.Tariff</td>
+                            <td>@s.CalculatedAmount</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div>
+                @if (editingTenantId != tenant.Id)
+                {
+                    <button class="btn btn-warning btn-sm" @onclick="() => StartEdit(tenant)">
+                        ✏️ Edit
+                    </button>
+                }
+                <button class="btn btn-danger btn-sm" @onclick="() => DeleteTenant(tenant.Id)">
+                    🗑️ Delete
+                </button>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private HttpClient Http => HttpClientFactory.CreateClient("API");
+    private List<TenantDto>? tenants;
+    private List<ServiceDto>? services;
+    private TenantDto newTenant = new();
+    private EditTenantRequest editTenant = new();
+    private bool showAddForm = false;
+    private int? editingTenantId = null;
+    private Dictionary<int, int> selectedServiceIds = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            tenants = await Http.GetFromJsonAsync<List<TenantDto>>("api/tenant");
+            services = await Http.GetFromJsonAsync<List<ServiceDto>>("api/service");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading data");
+        }
+    }
+
+    private void ToggleAddTenantForm()
+    {
+        showAddForm = !showAddForm;
+        if (showAddForm)
+        {
+            newTenant = new TenantDto();
+        }
+    }
+
+    private async Task CreateTenant()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/tenant", newTenant);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+                newTenant = new TenantDto();
+                showAddForm = false;
+                StateHasChanged();
+            }
+            else
+            {
+                Logger.LogError("Error creating tenant: {StatusCode}", response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating tenant");
+        }
+    }
+
+    private void StartEdit(TenantDto tenant)
+    {
+        editingTenantId = tenant.Id;
+        editTenant = new EditTenantRequest
+            {
+                Id = tenant.Id,
+                LastName = tenant.LastName,
+                FirstName = tenant.FirstName,
+                MiddleName = tenant.MiddleName,
+                Address = tenant.Address,
+                PersonalAccount = tenant.PersonalAccount,
+                ResidentsCount = tenant.ResidentsCount,
+                ApartmentArea = tenant.ApartmentArea
+            };
+        StateHasChanged();
+    }
+
+    private async Task SaveTenant(int tenantId)
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"api/tenant/{tenantId}", editTenant);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+                editingTenantId = null;
+                editTenant = new EditTenantRequest();
+                StateHasChanged();
+            }
+            else
+            {
+                Logger.LogError("Error updating tenant: {StatusCode}", response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating tenant");
+        }
+    }
+
+    private void CancelEdit()
+    {
+        editingTenantId = null;
+        editTenant = new EditTenantRequest();
+        StateHasChanged();
+    }
+
+    private async Task AddServiceToTenant(int tenantId)
+    {
+        if (selectedServiceIds.TryGetValue(tenantId, out var serviceId) && serviceId > 0)
+        {
+            try
+            {
+                var response = await Http.PostAsync($"api/tenant/{tenantId}/service/{serviceId}", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    await LoadData();
+                    selectedServiceIds[tenantId] = 0;
+                    StateHasChanged();
+                }
+                else
+                {
+                    Logger.LogError("Error adding service to tenant: {StatusCode}", response.StatusCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error adding service to tenant");
+            }
+        }
+    }
+
+    private async Task DeleteTenant(int id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this tenant?"))
+        {
+            try
+            {
+                var response = await Http.DeleteAsync($"api/tenant/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    await LoadData();
+                    StateHasChanged();
+                }
+                else
+                {
+                    Logger.LogError("Error deleting tenant: {StatusCode}", response.StatusCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error deleting tenant");
+            }
+        }
+    }
+
+    // DTO classes
+    public class EditTenantRequest
+    {
+        public int Id { get; set; }
+        public string LastName { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        public string Address { get; set; } = string.Empty;
+        public string PersonalAccount { get; set; } = string.Empty;
+        public int ResidentsCount { get; set; }
+        public decimal ApartmentArea { get; set; }
+    }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+}
