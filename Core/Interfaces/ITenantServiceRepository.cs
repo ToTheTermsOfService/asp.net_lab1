@@ -5,7 +5,7 @@ namespace Core.Interfaces
 {
     public interface ITenantServiceRepository
     {
-        List<TenantWithServices> GetAllTenantsWithServices();
+        List<Tenant> GetAllTenantsWithServices();
         Tenant? GetTenantById(int id);
         Tenant AddTenant(Tenant tenant);
         Tenant? UpdateTenant(int id, Tenant updatedTenant);

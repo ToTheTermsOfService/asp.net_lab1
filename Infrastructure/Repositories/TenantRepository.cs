@@ -14,30 +14,12 @@ namespace Infrastructure.Repositories
         {
             _dbContext = dbContext;
         }
-        public List<TenantWithServices> GetAllTenantsWithServices()
+        public List<Tenant> GetAllTenantsWithServices()
         {
             var tenants = _dbContext.Tenants
                 .Include(t => t.TenantServices)
                     .ThenInclude(ts => ts.Service)
                 .OrderBy(t => t.Id)
-                .Select(t => new TenantWithServices
-                {
-                    Id = t.Id,
-                    LastName = t.LastName,
-                    FirstName = t.FirstName,
-                    MiddleName = t.MiddleName ?? "",
-                    Address = t.Address,
-                    PersonalAccount = t.PersonalAccount,
-                    ResidentsCount = t.ResidentsCount,
-                    ApartmentArea = t.ApartmentArea,
-                    Services = t.TenantServices.Select(ts => new TenantServiceViewModel
-                    {
-                        ServiceName = ts.Service.Name,
-                        BillingType = ts.Service.BillingType,
-                        Tariff = ts.Service.Tariff,
-                        CalculatedAmount = ts.CalculatedAmount
-                    }).ToList()
-                })
                 .ToList();
 
             return tenants;

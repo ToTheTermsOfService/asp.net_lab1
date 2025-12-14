@@ -16,12 +16,6 @@ namespace API.Controllers
         {
             _repository = repository;
         }
-        [HttpGet]
-        public IActionResult GetAllTenantsWithServices()
-        {
-            var tenants = _repository.GetAllTenantsWithServices();
-            return Ok(tenants);
-        }
         [HttpGet("{id}")]
         public IActionResult GetTenantById(int id)
         {

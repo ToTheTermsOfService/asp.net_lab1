@@ -10,7 +10,7 @@ namespace API.Data
         {
             var builder = new ODataConventionModelBuilder();
 
-            builder.EntitySet<Tenant>("Tenant")
+            builder.EntitySet<Tenant>("TenantOData")
                    .EntityType
                    .HasKey(t => t.Id)
                    .Filter()

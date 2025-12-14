@@ -34,7 +34,6 @@ namespace WEB.Pages
         {
             var client = _httpClientFactory.CreateClient("API");
 
-            // --- OData запит для тенантів з пагінацією та фільтрацією ---
             var odataQuery = new StringBuilder("odata/TenantOData?");
 
             if (!string.IsNullOrEmpty(filter))
@@ -60,8 +59,8 @@ namespace WEB.Pages
             }
 
             // --- Services ---
-            Services = await client.GetFromJsonAsync<List<ServiceDto>>("odata/Service")
-                       ?? new List<ServiceDto>();
+            Services = await client.GetFromJsonAsync<List<ServiceDto>>("api/service")
+                   ?? new List<ServiceDto>();
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -150,7 +149,6 @@ namespace WEB.Pages
             return RedirectToPage();
         }
 
-        // Модель для парсингу OData відповіді
         public class ODataResponse<T>
         {
             [JsonPropertyName("@odata.context")]

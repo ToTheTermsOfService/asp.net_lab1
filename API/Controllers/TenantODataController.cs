@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace API.Controllers
 {
-    [Route("odata/[controller]")]
-    [ApiController]
     public class TenantODataController : ODataController
     {
         private readonly ITenantServiceRepository _repository;
@@ -20,12 +18,13 @@ namespace API.Controllers
         }
 
         // GET odata/Tenant
-        [EnableQuery] // Увімкнення OData запитів
+        [EnableQuery]   
         [HttpGet]
-        public IActionResult GetAllTenantsWithServices()
+        public IQueryable<Tenant> Get()
         {
-            var tenants = _repository.GetAllTenantsWithServices();
-            return Ok(tenants.AsQueryable());
+            return _repository
+                .GetAllTenantsWithServices()
+                .AsQueryable();
         }
 
         // GET odata/Tenant(5)
