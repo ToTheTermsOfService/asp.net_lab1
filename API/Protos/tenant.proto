@@ -1,0 +1,75 @@
+﻿syntax = "proto3";
+option csharp_namespace = "API.Protos";
+
+service TenantService {
+  rpc GetAllTenants (Empty) returns (TenantsResponse);
+  rpc GetTenantById (GetTenantRequest) returns (TenantResponse);
+  rpc CreateTenant (CreateTenantRequest) returns (TenantResponse);
+  rpc UpdateTenant (UpdateTenantRequest) returns (TenantResponse);
+  rpc DeleteTenant (DeleteTenantRequest) returns (DeleteResponse);
+  rpc AddServiceToTenant (AddServiceRequest) returns (Empty);
+}
+
+message Empty {}
+
+message GetTenantRequest {
+  int32 id = 1;
+}
+
+message CreateTenantRequest {
+  string last_name = 1;
+  string first_name = 2;
+  string middle_name = 3;
+  string address = 4;
+  string personal_account = 5;
+  int32 residents_count = 6;
+  double apartment_area = 7;
+}
+
+message UpdateTenantRequest {
+  int32 id = 1;
+  string last_name = 2;
+  string first_name = 3;
+  string middle_name = 4;
+  string address = 5;
+  string personal_account = 6;
+  int32 residents_count = 7;
+  double apartment_area = 8;
+}
+
+message DeleteTenantRequest {
+  int32 id = 1;
+}
+
+message AddServiceRequest {
+  int32 tenant_id = 1;
+  int32 service_id = 2;
+}
+
+message TenantResponse {
+  int32 id = 1;
+  string last_name = 2;
+  string first_name = 3;
+  string middle_name = 4;
+  string address = 5;
+  string personal_account = 6;
+  int32 residents_count = 7;
+  double apartment_area = 8;
+  repeated ServiceResponse services = 9;
+}
+
+message ServiceResponse {
+  int32 id = 1;
+  string service_name = 2;
+  string billing_type = 3;
+  double tariff = 4;
+  double calculated_amount = 5;
+}
+
+message TenantsResponse {
+  repeated TenantResponse tenants = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+}
