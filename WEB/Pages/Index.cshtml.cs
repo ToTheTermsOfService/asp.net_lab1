@@ -1,8 +1,10 @@
+// WEB.Pages.IndexModel
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using WEB.DTOs;
+using System.Text;
+using System.Text.Json.Serialization;
 
 namespace WEB.Pages
 {
@@ -13,27 +15,52 @@ namespace WEB.Pages
 
         [BindProperty]
         public TenantDto NewTenant { get; set; } = new();
+
         [BindProperty]
         public EditTenantRequest EditTenant { get; set; } = new();
+
         public bool ShowAddForm { get; set; } = false;
+
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<IndexModel> _logger;
+
         public IndexModel(IHttpClientFactory httpClientFactory, ILogger<IndexModel> logger)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
         }
-        private readonly ILogger<IndexModel> _logger;
 
-        public async Task OnGetAsync()
+        public async Task OnGetAsync(string filter = "", string orderBy = "", int page = 1, int pageSize = 10)
         {
             var client = _httpClientFactory.CreateClient("API");
 
-            // --- Tenants ---
-            Tenants = await client.GetFromJsonAsync<List<TenantDto>>("api/tenant")
-                      ?? new List<TenantDto>();
+            // --- OData запит для тенантів з пагінацією та фільтрацією ---
+            var odataQuery = new StringBuilder("odata/TenantOData?");
+
+            if (!string.IsNullOrEmpty(filter))
+                odataQuery.Append($"$filter={Uri.EscapeDataString(filter)}&");
+
+            if (!string.IsNullOrEmpty(orderBy))
+                odataQuery.Append($"$orderby={Uri.EscapeDataString(orderBy)}&");
+
+            odataQuery.Append($"$skip={(page - 1) * pageSize}&$top={pageSize}&$count=true");
+
+            var response = await client.GetAsync(odataQuery.ToString());
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var odataResponse = JsonSerializer.Deserialize<ODataResponse<TenantDto>>(
+                    json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+
+                Tenants = odataResponse?.Value ?? new List<TenantDto>();
+                TotalCount = odataResponse?.Count ?? 0;
+            }
 
             // --- Services ---
-            Services = await client.GetFromJsonAsync<List<ServiceDto>>("api/service")
+            Services = await client.GetFromJsonAsync<List<ServiceDto>>("odata/Service")
                        ?? new List<ServiceDto>();
         }
 
@@ -44,28 +71,35 @@ namespace WEB.Pages
                 await OnGetAsync();
                 return Page();
             }
-            var tenant = NewTenant;
+
             var client = _httpClientFactory.CreateClient("API");
-            var response = await client.PostAsJsonAsync("api/tenant", tenant);
+            var response = await client.PostAsJsonAsync("odata/TenantOData", NewTenant);
+
             if (!response.IsSuccessStatusCode)
             {
                 ModelState.AddModelError(string.Empty, "Помилка при створенні тенанта");
                 ShowAddForm = true;
                 await OnGetAsync();
-                return RedirectToPage();
+                return Page();
             }
+
             return RedirectToPage();
         }
+
         public async Task<IActionResult> OnPostAddServiceAsync(int tenantId, int serviceId)
         {
             var client = _httpClientFactory.CreateClient("API");
-            var response = await client.PostAsync($"api/tenant/{tenantId}/service/{serviceId}", null);
+
+            // OData action
+            var actionPayload = new { serviceId };
+            var response = await client.PostAsJsonAsync(
+                $"odata/Tenant({tenantId})/AddService",
+                actionPayload
+            );
 
             if (!response.IsSuccessStatusCode)
             {
-
                 return BadRequest();
-                //Show toaster
             }
 
             return RedirectToPage();
@@ -74,7 +108,7 @@ namespace WEB.Pages
         public async Task<IActionResult> OnPostDeleteAsync(int id)
         {
             var client = _httpClientFactory.CreateClient("API");
-            var response = await client.DeleteAsync($"api/tenant/{id}");
+            var response = await client.DeleteAsync($"odata/TenantOData({id})");
 
             if (response.IsSuccessStatusCode)
             {
@@ -85,6 +119,7 @@ namespace WEB.Pages
                 var errorContent = await response.Content.ReadAsStringAsync();
                 TempData["ErrorMessage"] = $"Помилка при видаленні: {errorContent}";
             }
+
             return RedirectToPage();
         }
 
@@ -95,8 +130,12 @@ namespace WEB.Pages
                 await OnGetAsync();
                 return Page();
             }
+
             var client = _httpClientFactory.CreateClient("API");
-            var response = await client.PutAsJsonAsync($"api/tenant/{EditTenant.Id}", EditTenant);
+            var response = await client.PutAsJsonAsync(
+                $"odata/Tenant({EditTenant.Id})",
+                EditTenant
+            );
 
             if (response.IsSuccessStatusCode)
             {
@@ -107,7 +146,24 @@ namespace WEB.Pages
                 var errorContent = await response.Content.ReadAsStringAsync();
                 TempData["ErrorMessage"] = $"Помилка при оновленні: {errorContent}";
             }
+
             return RedirectToPage();
         }
+
+        // Модель для парсингу OData відповіді
+        public class ODataResponse<T>
+        {
+            [JsonPropertyName("@odata.context")]
+            public string Context { get; set; }
+
+            [JsonPropertyName("@odata.count")]
+            public int? Count { get; set; }
+
+            public List<T> Value { get; set; }
+        }
+
+        public int TotalCount { get; set; }
+        public int CurrentPage { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
     }
 }
